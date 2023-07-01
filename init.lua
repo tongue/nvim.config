@@ -79,16 +79,18 @@ require('packer').startup(function(use)
   -- Filebrowser
   use {
     "luukvbaal/nnn.nvim",
-    config = function() require("nnn").setup {
-      picker = {
-        style = {
-          width = 0.7,
-          height = 0.7,
-          fullscreen = false
-        }
-      },
-      replace_netrw = 'picker'
-    } end
+    config = function()
+      require("nnn").setup {
+        picker = {
+          style = {
+            width = 0.7,
+            height = 0.7,
+            fullscreen = false
+          }
+        },
+        replace_netrw = 'picker'
+      }
+    end
   }
 
   -- Tpope stuff
@@ -102,23 +104,60 @@ require('packer').startup(function(use)
   use 'lewis6991/gitsigns.nvim'
 
   use {
+    'morhetz/gruvbox',
+    config = function()
+      -- require("gruvbox").setup({
+      --   dark_variant = 'soft'
+      -- });
+      -- vim.cmd.colorscheme("gruvbox")
+    end
+  }
+  use {
     'rose-pine/neovim',
     config = function()
       require("rose-pine").setup({
         dark_variant = 'moon'
       })
-      vim.cmd [[colorscheme rose-pine]]
+      vim.cmd.colorscheme("rose-pine");
     end
   }
   use 'nvim-lualine/lualine.nvim' -- Fancier statusline
-  use 'numToStr/Comment.nvim' -- "gc" to comment visual regions/lines
-  use 'tpope/vim-sleuth' -- Detect tabstop and shiftwidth automatically
+  use 'numToStr/Comment.nvim'     -- "gc" to comment visual regions/lines
+  use 'tpope/vim-sleuth'          -- Detect tabstop and shiftwidth automatically
 
   -- Fuzzy Finder (files, lsp, etc)
-  use { 'nvim-telescope/telescope.nvim', branch = '0.1.x', requires = { 'nvim-lua/plenary.nvim' } }
+  use {
+    'nvim-telescope/telescope.nvim',
+    branch = '0.1.x',
+    requires = { 'nvim-lua/plenary.nvim', 'nvim-telescope/telescope-live-grep-args.nvim' }
+  }
 
   -- Fuzzy Finder Algorithm which requires local dependencies to be built. Only load if `make` is available
   use { 'nvim-telescope/telescope-fzf-native.nvim', run = 'make', cond = vim.fn.executable 'make' == 1 }
+
+
+  use {
+    "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
+    event = "InsertEnter",
+    config = function()
+      require("copilot").setup({
+        suggestion = {
+          enabled = true,
+          auto_trigger = true,
+          debounce = 75,
+          keymap = {
+            accept = "<C-l>",
+            accept_word = false,
+            accept_line = false,
+            next = "<C-j>",
+            prev = "<C-k>",
+            dismiss = "<C-]>",
+          },
+        },
+      })
+    end,
+  }
 
   -- Add custom plugins to packer from ~/.config/nvim/lua/custom/plugins.lua
   local has_plugins, plugins = pcall(require, 'custom.plugins')
@@ -258,7 +297,7 @@ require('lualine').setup {
       {
         'filename',
         file_status = true, -- displays file status (readonly status, modified status)
-        path = 1 -- 0 = just filename, 1 = relative path, 2 = absolute path, 3 = absolute path with ~
+        path = 1            -- 0 = just filename, 1 = relative path, 2 = absolute path, 3 = absolute path with ~
       }
     },
   }
@@ -294,6 +333,7 @@ require('telescope').setup {
 
 -- Enable telescope fzf native, if installed
 pcall(require('telescope').load_extension, 'fzf')
+pcall(require('telescope').load_extension, 'live_grep_args')
 
 vim.keymap.set('n', '<leader>w', ':w<cr>', { desc = '[W]rite' })
 
@@ -308,7 +348,8 @@ vim.keymap.set('n', '<leader>/', require('telescope.builtin').current_buffer_fuz
 vim.keymap.set('n', '<leader>ff', require('telescope.builtin').find_files, { desc = '[F]ind [F]iles' })
 vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags, { desc = '[F]ind [H]elp' })
 vim.keymap.set('n', '<leader>fw', require('telescope.builtin').grep_string, { desc = '[F]ind current [W]ord' })
-vim.keymap.set('n', '<leader>fg', require('telescope.builtin').live_grep, { desc = '[F]ind by [G]rep' })
+vim.keymap.set('n', '<leader>fg', require("telescope").extensions.live_grep_args.live_grep_args,
+  { desc = '[F]ind by [G]rep' })
 vim.keymap.set('n', '<leader>fd', require('telescope.builtin').diagnostics, { desc = '[F]ind [D]iagnostics' })
 vim.keymap.set('n', '<leader><space>', require('telescope.builtin').oldfiles, { desc = 'Old fil[e]s' })
 vim.keymap.set('n', '<leader>gf', require('telescope.builtin').git_files, { desc = '[O]pen Git files' })
@@ -435,6 +476,12 @@ local on_attach = function(_, bufnr)
   end, { desc = 'Format current buffer with LSP' })
 end
 
+local signs = { Error = "󰅚 ", Warn = "󰀪 ", Info = "󰋽 ", Hint = "󰌶 " }
+for type, icon in pairs(signs) do
+  local hl = "DiagnosticSign" .. type
+  vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+end
+
 -- Enable the following language servers
 --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
 --
@@ -458,7 +505,7 @@ local servers = {
     }
   },
 
-  sumneko_lua = {
+  lua_ls = {
     Lua = {
       workspace = { checkThirdParty = false },
       telemetry = { enable = false },
@@ -502,15 +549,15 @@ null_ls.setup({
   sources = {
     null_ls.builtins.formatting.stylua,
     null_ls.builtins.diagnostics.eslint.with({
-      extra_filetypes = { "svelte" },
+      extra_filetypes = { "svelte", "typescriptreact" },
       only_local = "node_modules/.bin",
     }),
     null_ls.builtins.code_actions.eslint.with({
-      fxtra_filetypes = { "svelte" },
+      fxtra_filetypes = { "svelte", "typescriptreact" },
       only_local = "node_modules/.bin",
     }),
     null_ls.builtins.formatting.prettier.with({
-      extra_filetypes = { "svelte" },
+      extra_filetypes = { "svelte", "css", "typescriptreact" },
       only_local = "node_modules/.bin",
     }),
     null_ls.builtins.diagnostics.jsonlint,
@@ -547,6 +594,17 @@ cmp.setup {
     { name = 'nvim_lsp' },
     { name = 'luasnip' },
   },
+  completion = {
+    get_trigger_characters = function(trigger_characters)
+      local new_trigger_characters = {}
+      for _, char in ipairs(trigger_characters) do
+        if char ~= '>' then
+          table.insert(new_trigger_characters, char)
+        end
+      end
+      return new_trigger_characters
+    end
+  }
 }
 
 -- The line beneath this is called `modeline`. See `:help modeline`

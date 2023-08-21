@@ -132,11 +132,22 @@ require('lazy').setup({
   },
 
   {
-    -- Theme inspired by Atom
-    'navarasu/onedark.nvim',
+    'rose-pine/neovim',
+    name = 'rose-pine',
     priority = 1000,
     config = function()
-      vim.cmd.colorscheme 'onedark'
+      require('rose-pine').setup({
+        --- @usage 'auto'|'main'|'moon'|'dawn'
+        variant = 'auto',
+        --- @usage 'main'|'moon'|'dawn'
+        dark_variant = 'moon',
+        bold_vert_split = false,
+        dim_nc_background = false,
+        disable_background = false,
+        disable_float_background = false,
+        disable_italics = false,
+      })
+      vim.cmd.colorscheme 'rose-pine'
     end,
   },
 
@@ -147,7 +158,7 @@ require('lazy').setup({
     opts = {
       options = {
         icons_enabled = true,
-        theme = 'onedark',
+        theme = 'rose-pine',
         component_separators = '',
         section_separators = '',
       },

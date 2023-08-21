@@ -27,6 +27,9 @@ return {
         json = {
           require('formatter.filetypes.json').prettier,
         },
+        markdown = {
+          require('formatter.filetypes.markdown').prettier,
+        },
         -- Use the special "*" filetype for defining formatter configurations on
         -- any filetype
         ['*'] = {

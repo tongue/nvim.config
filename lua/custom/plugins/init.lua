@@ -8,6 +8,7 @@ vim.o.scrolloff = 8
 vim.o.tabstop = 2
 vim.o.relativenumber = true
 vim.o.hlsearch = true
+vim.opt.swapfile = false
 
 vim.keymap.set('n', '<leader>w', '<cmd>w<CR>', { desc = '[W]rite Buffer' })
 

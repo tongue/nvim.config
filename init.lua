@@ -158,9 +158,12 @@ require('lazy').setup({
     opts = {
       options = {
         icons_enabled = true,
-        theme = 'rose-pine',
+        theme = 'auto',
         component_separators = '',
         section_separators = '',
+      },
+      sections = {
+        lualine_c = { { 'filename', path = 1 } },
       },
     },
   },
